@@ -1,0 +1,474 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Google Drive Image Gallery</title>
+  <style>
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      margin: 0;
+      padding: 0;
+      padding-top: 70px;
+      background-color: #121212;
+      color: #fff;
+      height: 100%;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      flex-direction: column;
+      overflow: auto;
+    }
+
+    h1 {
+      text-align: center;
+      margin: 30px 0 10px;
+      font-size: 3rem;
+      text-shadow: 0 0 10px rgba(0, 255, 255, 0.7), 0 0 20px rgba(0, 255, 255, 0.5);
+    }
+
+    .album-group-container {
+      width: 80%;
+      max-width: 1000px;
+    }
+
+    .album-group {
+      background: rgba(0, 255, 255, 0.1);
+      margin: 20px 0;
+      border-radius: 12px;
+      box-shadow: 0 0 10px rgba(0, 255, 255, 0.3);
+      overflow: hidden;
+    }
+
+    .album-group-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 16px;
+      cursor: pointer;
+      font-size: 1.2rem;
+      background: rgba(0, 255, 255, 0.2);
+      border-bottom: 1px solid rgba(0, 255, 255, 0.3);
+    }
+
+    .album-timeline {
+      display: none;
+      flex-direction: column;
+      padding: 20px;
+      background-color: rgba(255, 255, 255, 0.05);
+      animation: fadeIn 0.5s ease forwards;
+    }
+
+    .album-entry {
+      position: relative;
+      padding: 10px 20px;
+      margin-bottom: 12px;
+      background: rgba(0, 255, 255, 0.1);
+      border-left: 4px solid cyan;
+      border-radius: 8px;
+      transition: transform 0.2s;
+      cursor: pointer;
+    }
+
+    .album-entry:hover {
+      transform: scale(1.02);
+      background: rgba(0, 255, 255, 0.2);
+    }
+
+    .album-entry::before {
+      content: '';
+      position: absolute;
+      left: -10px;
+      top: 50%;
+      transform: translateY(-50%);
+      width: 12px;
+      height: 12px;
+      background: cyan;
+      border-radius: 50%;
+      box-shadow: 0 0 8px cyan;
+    }
+
+    .glass-container {
+      background: rgba(255, 255, 255, 0.1);
+      border-radius: 20px;
+      padding: 30px;
+      backdrop-filter: blur(10px);
+      box-shadow: 0 4px 30px rgba(0, 255, 255, 0.4);
+      width: 80%;
+      max-width: 1200px;
+      margin-top: 20px;
+      position: relative;
+    }
+
+    #fileContainer {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+      gap: 16px;
+      padding: 20px;
+      visibility: hidden;
+    }
+
+#fileContainer img {
+  width: 100%;
+  aspect-ratio: 1 / 1; /* or try 3 / 4 or 4 / 3 based on preference */
+  object-fit: cover;
+  border-radius: 12px;
+  border: 2px solid rgba(0, 255, 255, 0.4);
+  box-shadow: 0 0 8px rgba(0, 255, 255, 0.6), 0 0 16px rgba(0, 255, 255, 0.3);
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+
+    #fileContainer img:hover {
+      transform: scale(1.05);
+      box-shadow: 0 0 12px rgba(0, 255, 255, 0.8), 0 0 24px rgba(0, 255, 255, 0.5);
+    }
+
+    .loading-animation {
+      font-size: 2rem;
+      color: rgba(0, 255, 255, 0.8);
+      text-align: center;
+      animation: blink 1s infinite;
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+    }
+
+    @keyframes blink {
+      0% { opacity: 0; }
+      50% { opacity: 1; }
+      100% { opacity: 0; }
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(-10px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+
+.image-modal {
+  display: none;
+  position: fixed;
+  z-index: 9999;
+  padding-top: 60px;
+  left: 0;
+  top: 0;
+  width: 100%;
+  height: 100%;
+  overflow: auto;
+  background-color: rgba(0,0,0,0.9);
+}
+
+.image-modal .modal-content {
+  margin: auto;
+  display: block;
+  max-width: 90%;
+  max-height: 90%;
+  border-radius: 12px;
+  box-shadow: 0 0 20px rgba(0,255,255,0.6);
+  animation: zoomIn 0.3s ease;
+}
+
+.image-modal .close-btn {
+  position: absolute;
+  top: 20px;
+  right: 35px;
+  color: cyan;
+  font-size: 40px;
+  font-weight: bold;
+  cursor: pointer;
+  z-index: 10000;
+}
+
+@keyframes zoomIn {
+  from { transform: scale(0.8); opacity: 0; }
+  to { transform: scale(1); opacity: 1; }
+}
+
+  </style>
+  <link rel="stylesheet" href="navbar.css" />
+
+</head>
+<body>
+  <h1>Google Drive Image Gallery</h1>
+
+<nav class="navbar">
+  <div class="logo" onclick="scrollToTop()">📸 My Gallery</div>
+  <div class="nav-links">
+    <button onclick="scrollToGroup('SamsungA72')">Samsung A72</button>
+    <button onclick="scrollToGroup('GoogleCam')">Google Cam</button>
+  </div>
+  <div class="nav-search">
+    <input type="text" id="albumSearch" placeholder="Search albums..." />
+    <button onclick="clearSearch()">❌</button>
+  </div>
+</nav>
+
+
+<input
+  type="text"
+  id="albumSearch"
+  placeholder="Search albums (e.g., Class 12, Gopi BDY...)"
+  style="margin-top: 20px; padding: 10px 15px; border-radius: 8px; border: none; font-size: 1rem; width: 80%; max-width: 500px; box-shadow: 0 0 10px rgba(0,255,255,0.4); background-color: #1e1e1e; color: #fff;"
+/>
+
+
+  <div class="album-group-container" id="albumGroupContainer"></div>
+
+  <div class="glass-container">
+    <div id="fileContainer">
+      <div class="loading-animation">Loading...</div>
+    </div>
+  </div>
+
+  <div class="image-counter" id="imageCounter">Images Loaded: 0</div>
+
+  <script>
+    const folderIds = {
+      album1: '1aIagh9HNCb6csvbWsE5k13F04eMpKbyw',
+      album5: '1f2gFlEHhzxrJHeHeMF3ASyJkF4yJoLSl',
+      album7: '1VzxdDh4vXHba56XVm5i8cTRsC0EecXJS',
+      album10: '1DHKMUIsAbTNbXO5_Kq0nlUj65u5gxPdL'
+    };
+
+    const albumGroups = {
+      SamsungA72: {
+        label: "Samsung A72",
+        albums: {
+          album1: "Jan 1 : Prashanna BDY",
+          album5: "Sept 13 : Gopi BDY",
+          album7: "Sept 24 : Class 12"
+        }
+      },
+      GoogleCam: {
+        label: "Google Cam",
+        albums: {
+          album10: "Google Cam"
+        }
+      }
+    };
+
+    const apiKey = 'AIzaSyB2oYRDjlQK-QWOmo69J5ZB14eprrMYJDY';
+    let currentAlbum = '';
+    let nextPageToken = '';
+    let imagesLoaded = 0;
+    const albumCache = {};
+
+function loadAlbum(album) {
+  currentAlbum = album;
+  window.scrollTo(0, 0); // This makes sure the page scrolls to the top.
+  const fileContainer = document.getElementById("fileContainer");
+
+  // Scroll to the top of the glass-container when album is loaded
+  const glassContainer = document.querySelector('.glass-container');
+  glassContainer.scrollIntoView({ behavior: 'smooth', block: 'start' });
+
+  if (albumCache[album]) {
+    fileContainer.innerHTML = albumCache[album];
+    fileContainer.style.visibility = 'visible';
+    document.getElementById("imageCounter").textContent = `Images Loaded: ${albumCache[album].match(/<img/g)?.length || 0}`;
+    return;
+  }
+
+  nextPageToken = '';
+  imagesLoaded = 0;
+  fileContainer.innerHTML = '<div class="loading-animation">Loading...</div>';
+  fileContainer.style.visibility = 'visible';
+  document.getElementById("imageCounter").textContent = "Images Loaded: 0";
+  listPublicFiles(album);
+}
+
+
+    async function listPublicFiles(album) {
+      const folderId = folderIds[album];
+      const allFiles = [];
+      let morePages = true;
+
+      while (morePages) {
+        const url = `https://www.googleapis.com/drive/v3/files?q='${folderId}'+in+parents&orderBy=name&fields=files(id,name,mimeType),nextPageToken&pageSize=100&pageToken=${nextPageToken}&key=${apiKey}`;
+
+        try {
+          const response = await fetch(url);
+          const data = await response.json();
+
+          if (data.files && data.files.length > 0) {
+            allFiles.push(...data.files);
+          }
+
+          if (data.nextPageToken) {
+            nextPageToken = data.nextPageToken;
+          } else {
+            morePages = false;
+          }
+        } catch (error) {
+          console.error("Error fetching files:", error);
+          document.getElementById("fileContainer").textContent = "Error loading images.";
+          return;
+        }
+      }
+
+      allFiles.sort((a, b) => a.name.localeCompare(b.name, undefined, { sensitivity: 'base' }));
+      displayFiles(allFiles);
+    }
+
+    async function displayFiles(files) {
+      const fileContainer = document.getElementById("fileContainer");
+      const imageFiles = files.filter(file => file.mimeType.startsWith("image/"));
+      const promises = imageFiles.map(file => fetchThumbnail(file));
+      const thumbnails = await Promise.all(promises);
+
+      thumbnails.forEach(imgElement => {
+        if (imgElement) fileContainer.appendChild(imgElement);
+      });
+
+      albumCache[currentAlbum] = fileContainer.innerHTML;
+      fileContainer.style.visibility = 'visible';
+      document.getElementById("imageCounter").textContent = `Images Loaded: ${imageFiles.length}`;
+      imagesLoaded = imageFiles.length;
+
+      const loadingAnimation = document.querySelector(".loading-animation");
+      if (loadingAnimation) {
+        loadingAnimation.style.display = 'none';
+      }
+    }
+
+    async function fetchThumbnail(file) {
+      const url = `https://www.googleapis.com/drive/v3/files/${file.id}?fields=thumbnailLink&key=${apiKey}`;
+
+      try {
+        const response = await fetch(url);
+        const data = await response.json();
+
+        if (data.thumbnailLink) {
+          const imgElement = document.createElement("img");
+          imgElement.src = data.thumbnailLink;
+          imgElement.alt = file.name;
+          imgElement.loading = "lazy";
+          imgElement.onclick = () => openFullImage(file.id);
+          return imgElement;
+        }
+      } catch (error) {
+        console.error("Error fetching thumbnail for", file.name, error);
+      }
+
+      return null;
+    }
+
+document.getElementById("albumSearch").addEventListener("input", function () {
+  const query = this.value.trim().toLowerCase();
+  const entries = document.querySelectorAll(".album-entry");
+
+  entries.forEach(entry => {
+    const match = entry.dataset.searchText.includes(query);
+    entry.style.display = match || query === "" ? "block" : "none";
+  });
+
+  // Toggle group visibility
+  const groups = document.querySelectorAll(".album-group");
+  groups.forEach(group => {
+    const timeline = group.querySelector(".album-timeline");
+    const hasVisible = Array.from(timeline.children).some(child => child.style.display !== "none");
+    if (query && hasVisible) {
+      timeline.style.display = "flex";
+      group.querySelector("span").textContent = "▲";
+    } else if (!query) {
+      timeline.style.display = "none";
+      group.querySelector("span").textContent = "▼";
+    }
+  });
+});
+
+
+function openFullImage(fileId) {
+  const fullImageUrl = `https://www.googleapis.com/drive/v3/files/${fileId}?alt=media&key=${apiKey}`;
+  const modal = document.getElementById("imageModal");
+  const modalImg = document.getElementById("modalImage");
+  modalImg.src = fullImageUrl;
+  modal.style.display = "block";
+}
+
+function renderAlbumGroups() {
+  const container = document.getElementById("albumGroupContainer");
+  container.innerHTML = ""; // Clear if rerendering
+
+  for (const groupKey in albumGroups) {
+    const group = albumGroups[groupKey];
+    const groupDiv = document.createElement("div");
+    groupDiv.className = "album-group";
+
+    const header = document.createElement("div");
+    header.className = "album-group-header";
+    header.innerHTML = `${group.label} <span style="font-size: 1.5rem;">▼</span>`;
+    header.onclick = () => {
+      const timeline = groupDiv.querySelector(".album-timeline");
+      const isVisible = timeline.style.display === "flex";
+      timeline.style.display = isVisible ? "none" : "flex";
+      header.querySelector("span").textContent = isVisible ? "▼" : "▲";
+    };
+
+    const timeline = document.createElement("div");
+    timeline.className = "album-timeline";
+
+    for (const albumId in group.albums) {
+      const entry = document.createElement("div");
+      entry.className = "album-entry";
+      entry.textContent = group.albums[albumId];
+      entry.dataset.albumId = albumId; // for loading
+      entry.dataset.searchText = group.albums[albumId].toLowerCase(); // for filtering
+      entry.onclick = () => loadAlbum(albumId);
+      timeline.appendChild(entry);
+    }
+
+    groupDiv.appendChild(header);
+    groupDiv.appendChild(timeline);
+    container.appendChild(groupDiv);
+  }
+}
+
+function scrollToTop() {
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+function scrollToGroup(groupKey) {
+  const group = document.querySelector(`.album-group:nth-of-type(${Object.keys(albumGroups).indexOf(groupKey) + 1})`);
+  if (group) {
+    group.scrollIntoView({ behavior: 'smooth' });
+    const timeline = group.querySelector('.album-timeline');
+    if (timeline.style.display !== "flex") {
+      timeline.style.display = "flex";
+      group.querySelector("span").textContent = "▲";
+    }
+  }
+}
+
+function clearSearch() {
+  const searchInput = document.getElementById("albumSearch");
+  searchInput.value = "";
+  searchInput.dispatchEvent(new Event("input"));
+}
+
+function closeModal() {
+  const modal = document.getElementById("imageModal");
+  modal.style.display = "none";
+  document.getElementById("modalImage").src = ""; // Clear image to stop loading
+}
+
+window.onclick = function (event) {
+  const modal = document.getElementById("imageModal");
+  if (event.target === modal) {
+    closeModal();
+  }
+};
+
+
+    renderAlbumGroups();
+  </script>
+
+<div id="imageModal" class="image-modal" style="display: none;">
+  <span class="close-btn" onclick="closeModal()">×</span>
+  <img class="modal-content" id="modalImage" />
+</div>
+
+</body>
+</html>
