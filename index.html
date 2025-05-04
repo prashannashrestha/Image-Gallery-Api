@@ -185,6 +185,58 @@
   from { transform: scale(0.8); opacity: 0; }
   to { transform: scale(1); opacity: 1; }
 }
+.hover-reveal-bg {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    background-image: url('a.jpg');
+    background-size: cover;
+    background-position: center;
+    z-index: -1; /* Keep it behind everything */
+    pointer-events: none; /* So it doesn’t block mouse events */
+
+    /* Initial mask hides everything */
+    -webkit-mask-image: radial-gradient(circle 0px at center, transparent 0%, transparent 100%);
+    mask-image: radial-gradient(circle 0px at center, transparent 0%, transparent 100%);
+  }
+
+  .page-content {
+    position: relative;
+    z-index: 1;
+    padding: 2rem;
+    color: white;
+    font-family: sans-serif;
+  }
+
+    .hover-wrapper {
+      position: relative;
+      width: 0vw;
+      height: 0vh;
+      overflow: hidden;
+    }
+
+    .hover-hide-image {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      position: absolute;
+      top: 0;
+      left: 0;
+      /* Hide the image with mask */
+      -webkit-mask-image: radial-gradient(circle 0px at center, transparent 0%, transparent 100%);
+      mask-image: radial-gradient(circle 0px at center, transparent 0%, transparent 100%);
+      transition: mask-image 0.1s, -webkit-mask-image 0.1s;
+      pointer-events: none; /* allow hover events to pass through */
+
+.hover-wrapper:hover .hover-hide-image {
+  opacity: 0;
+  pointer-events: none;
+}
+.hover-wrapper {
+  background: transparent;
+}
 
   </style>
   <link rel="stylesheet" href="navbar.css" />
