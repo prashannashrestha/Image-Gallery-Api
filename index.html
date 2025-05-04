@@ -193,6 +193,12 @@
 <body>
   <h1>Google Drive Image Gallery</h1>
 
+  <div class="hover-reveal-bg" id="bgImage"></div>
+
+<div class="hover-wrapper" id="hoverArea">
+  <img src="a.jpg" class="hover-hide-image" id="hoverImage" />
+</div>
+
 <nav class="navbar">
   <div class="logo" onclick="scrollToTop()">📸 My Gallery</div>
   <div class="nav-links">
@@ -461,7 +467,28 @@ window.onclick = function (event) {
   }
 };
 
+  const bg = document.getElementById("bgImage");
 
+  document.addEventListener("mousemove", (e) => {
+    const x = e.clientX;
+    const y = e.clientY;
+    const radius = 120;
+
+    const gradient = `radial-gradient(circle ${radius}px at ${x}px ${y}px, rgba(0,0,0,0.4) 0%, transparent 100%)`;
+
+    bg.style.webkitMaskImage = gradient;
+    bg.style.maskImage = gradient;
+  });
+
+  document.addEventListener("mouseleave", () => {
+    bg.style.webkitMaskImage = "radial-gradient(circle 0px at center, transparent 0%, transparent 100%)";
+    bg.style.maskImage = "radial-gradient(circle 0px at center, transparent 0%, transparent 100%)";
+  });
+  document.addEventListener("mouseleave", () => {
+    // Hide again when mouse leaves
+    bg.style.webkitMaskImage = "radial-gradient(circle 0px at center, transparent 0%, transparent 100%)";
+    bg.style.maskImage = "radial-gradient(circle 0px at center, transparent 0%, transparent 100%)";
+  });
     renderAlbumGroups();
   </script>
 
